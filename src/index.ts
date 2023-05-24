@@ -41,7 +41,7 @@ const RECONNECT_ATTEMPTS = 2;
 
 export class WebRTCPlayer extends EventEmitter {
   private videoElement: HTMLVideoElement;
-  private peer: RTCPeerConnection = <RTCPeerConnection>{};
+  private peer: RTCPeerConnection | null = <RTCPeerConnection>{};
   private adapterType: string;
   private adapterFactory: AdapterFactoryFunction | undefined = undefined;
   private iceServers: RTCIceServer[];
@@ -187,7 +187,7 @@ export class WebRTCPlayer extends EventEmitter {
   }
 
   private async onConnectionStateChange() {
-    if (this.peer.connectionState === 'failed') {
+    if (this.peer?.connectionState === 'failed') {
       this.emit(Message.PEER_CONNECTION_FAILED);
       this.peer && this.peer.close();
 
@@ -201,7 +201,7 @@ export class WebRTCPlayer extends EventEmitter {
       );
       await this.connect();
       this.reconnectAttemptsLeft--;
-    } else if (this.peer.connectionState === 'connected') {
+    } else if (this.peer?.connectionState === 'connected') {
       this.log('Connected');
       this.videoElement.srcObject = this.stream;
       this.reconnectAttemptsLeft = RECONNECT_ATTEMPTS;
@@ -340,6 +340,7 @@ export class WebRTCPlayer extends EventEmitter {
   stop() {
     clearInterval(this.statsInterval);
     this.peer.close();
+    this.peer = null
     this.videoElement.srcObject = null;
     this.videoElement.load();
   }
